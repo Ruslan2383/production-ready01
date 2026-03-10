@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - .:/workspace:cached
+    command: sleep infinity
+    networks:
+      - app-net
+
+  api:
+    build: ./services/api
+    depends_on:
+      - db
+    env_file:
+      - ./services/api/.env
+    networks:
+      - app-net
+
+  web:
+    build: ./services/web
+    depends_on:
+      - api
+    env_file:
+      - ./services/web/.env
+    networks:
+      - app-net
+
+  worker:
+    build: ./services/worker
+    depends_on:
+      - db
+    env_file:
+      - ./services/worker/.env
+    networks:
+      - app-net
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-net
+
+networks:
+  app-net:
+
+volumes:
+  db-data:
